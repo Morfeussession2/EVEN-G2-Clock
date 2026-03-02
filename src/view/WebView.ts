@@ -191,7 +191,7 @@ class WebView {
     private getStateLabel(state: AppState): string {
         switch (state) {
             case AppState.STOPWATCH: return 'Stopwatch';
-            case AppState.TIMER: return 'Time';
+            case AppState.TIMER: return 'Timer';
             case AppState.ALARM: return 'Alarm';
             default: return '';
         }

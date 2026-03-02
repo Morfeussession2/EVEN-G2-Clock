@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Even Time</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="/index.css">
+</head>
+
+<body>
+    <div id="app">
+
+        <!-- HEADER -->
+        <header class="app-header">
+            <h2>Even R Clock</h2>
+        </header>
+
+        <!-- MAIN DISPLAY -->
+        <div id="main-display" class="card display-area">
+            <div id="mode-title" class="mode-title">Stopwatch</div>
+
+            <div id="web-clock" class="clock-display">
+                00:00:00
+            </div>
+
+            <div id="functional-controls">
+                <!-- Controls renderizados pelo WebView -->
+            </div>
+        </div>
+
+        <!-- MODE GRID -->
+        <div class="grid">
+
+            <div id="mode-stopwatch" class="card mode-card">
+                <div class="icon icon-stopwatch"></div>
+                <span class="label">Stopwatch</span>
+            </div>
+
+            <div id="mode-timer" class="card mode-card">
+                <div class="icon icon-timer"></div>
+                <span class="label">Timer</span>
+            </div>
+
+            <div id="mode-alarm" class="card mode-card">
+                <div class="icon icon-alarm"></div>
+                <span class="label">Alarm</span>
+            </div>
+
+            <div id="mode-menu" class="card mode-card">
+                <div class="icon icon-history"></div>
+                <span class="label">History</span>
+            </div>
+
+        </div>
+
+        <!-- BOTTOM NAV (opcional, visual apenas) -->
+
+
+    </div>
+
+    <script type="module" src="/src/Main.ts"></script>
+</body>
+
+</html>

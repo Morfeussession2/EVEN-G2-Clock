@@ -1,0 +1,24 @@
+{
+    "name": "evenclock",
+    "version": "1.0.0",
+    "description": "Clock, Alarm, Stopwatch and Timer for Even G2 smart glasses",
+    "license": "ISC",
+    "author": "Antigravity",
+    "type": "commonjs",
+    "scripts": {
+        "dev": "evenhub qr --path \"/\" --http && vite",
+        "build": "vite build",
+        "preview": "vite preview",
+        "pack": "npm run build && evenhub pack app.json dist",
+        "qr": "evenhub qr -p 5173 --path \"/\" --http",
+        "sim": "evenhub-simulator localhost:5173 && vite"
+    },
+    "dependencies": {
+        "@evenrealities/even_hub_sdk": "^0.0.7",
+        "@evenrealities/evenhub-simulator": "^0.1.2"
+    },
+    "devDependencies": {
+        "@types/node": "^25.1.0",
+        "vite": "^7.3.1"
+    }
+}

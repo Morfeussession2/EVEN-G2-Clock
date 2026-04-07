@@ -1,19 +1,18 @@
 {
-    "package_id": "com.evenclock.app",
-    "edition": "202602",
-    "name": "EvenClock",
-    "version": "0.1.0",
-    "min_app_version": "0.1.0",
-    "tagline": "Premium Clock App for Even G2",
-    "description": "Clock with Alarm, Stopwatch and Timer functions controlled via glasses actions.",
-    "author": "Antigravity",
+    "package_id": "com.evenclock.g2v2",
+    "edition": "202601",
+    "name": "Alarm",
+    "version": "1.0.0",
+    "min_app_version": "2.0.0",
+    "min_sdk_version": "0.0.7",
     "entrypoint": "index.html",
-    "permissions": {
-        "network": [
-            "evenhub.evenrealities.com"
-        ],
-        "fs": [
-            "./assets"
-        ]
-    }
+    "permissions": [
+        {
+            "name": "network",
+            "desc": "Required to sync activities with Strava and load map tiles."
+        }
+    ],
+    "supported_languages": [
+        "en"
+    ]
 }

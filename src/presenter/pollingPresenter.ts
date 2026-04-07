@@ -49,19 +49,15 @@ class PollingPresenter {
                     console.log("[polling] Alarm triggered!");
                     clockModel.state = AppState.ALARM_TRIGGERED;
 
-                    // Sound Experiment: Toggle mic to see if it triggers system beep
-                    // Non-blocking IIFE to prevent halting the UI render loop
                     (async () => {
                         try {
                             const bridge = await waitForEvenAppBridge();
-                            bridge.audioControl(true); // Don't await, just fire
-                            setTimeout(async () => {
-                                const b = await waitForEvenAppBridge();
-                                b.audioControl(false); // Don't await, just fire
-                                console.log("[polling] Mic toggle (beep experiment) sent");
-                            }, 150);
+                            // Use exitMode=1 para mostrar o popup nativo perguntando se deseja sair.
+                            // Funciona como um aviso visual intrusivo para o alarme.
+                            bridge.shutDownPageContainer(1); 
+                            console.log("[polling] Native popup triggered via shutDownPageContainer");
                         } catch (err) {
-                            console.error("[polling] Mic toggle error:", err);
+                            console.error("[polling] Native popup error:", err);
                         }
                     })();
                 }

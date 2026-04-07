@@ -11,8 +11,15 @@ export async function convertImageToGrayscalePng(imageUrl: string, targetWidth: 
     canvas.height = targetHeight;
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Could not get canvas context');
+    // Fill canvas with pure white first.
+    // This prevents transparent anti-aliasing pixels from blending into "black",
+    // which generates a dark halo that makes fine lines look horribly thick when downscaled!
+    ctx.fillStyle = '#000000ff';
+    ctx.fillRect(0, 0, targetWidth, targetHeight);
 
+    // Optimize settings for downscaling thin strokes
     ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     // Use full image dimensions
     const sourceW = bitmap.width;
@@ -20,6 +27,7 @@ export async function convertImageToGrayscalePng(imageUrl: string, targetWidth: 
     const sourceX = 0;
     const sourceY = 0;
 
+    // Draw image over the white background
     ctx.drawImage(bitmap, sourceX, sourceY, sourceW, sourceH, 0, 0, targetWidth, targetHeight);
 
     const imageData = ctx.getImageData(0, 0, targetWidth, targetHeight);

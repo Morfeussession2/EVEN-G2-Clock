@@ -39,7 +39,7 @@ const MAX_WIDTH = 576;
  * Button lists always use 0-based indices:
  *   MENU             → [0] Cronometro  [1] Timer       [2] Alarm
  *   STOPWATCH        → [0] Inic/Pausar [1] Reiniciar   [2] Voltar Menu
- *   TIMER_SELECT     → [0] 1 min       [1] 5 min       [2] 10 min      [3] 30 min   [4] Cancelar
+ *   TIMER_SELECT     → [0] 1 min       [1] 5 min       [2] 10 min      [3] 30 min   [4] Back Menuar
  *   TIMER            → [0] Pausar/Ret. [1] Reiniciar   [2] Sair
  *   ALARM            → [0] Hora +1     [1] Min +5      [2] Voltar Menu
  *   ALARM_TRIGGERED  → [0] OK
@@ -60,7 +60,7 @@ function buildScreenConfig(state: AppState): {
             return {
                 mainContent: "Duration",
                 listName: "timerSelectList",
-                btnNames: ["1 min", "5 min", "10 min", "30 min", "Cancel"],
+                btnNames: ["1 min", "5 min", "10 min", "30 min", "Back Menu"],
             };
         case AppState.TIMER: {
             const running = timerModel.getIsRunning();
@@ -77,6 +77,13 @@ function buildScreenConfig(state: AppState): {
                 listName: "alarmList",
                 btnNames: [alarm.enabled ? "Off" : "On", "+1h", "+5m", "Back Menu"],
             };
+        case AppState.ALARM_ACTIVE:
+            const curAlarm = clockModel.alarmSetting;
+            return {
+                mainContent: `${String(curAlarm.hour).padStart(2, '0')}:${String(curAlarm.min).padStart(2, '0')} [ON]`,
+                listName: "alarmActiveList",
+                btnNames: [""], // Invisible button
+            };
         case AppState.ALARM_TRIGGERED:
             return {
                 mainContent: "!! Alarm !!",
@@ -92,16 +99,61 @@ function buildScreenConfig(state: AppState): {
     }
 }
 
-function buildContainerPayload(mainContent: string, listName: string, btnNames: string[], mainY: number = 50, showImage: boolean = true) {
+function buildContainerPayload(mainContent: string, listName: string, btnNames: string[], mainY: number = 50, showImage: boolean = true, isAlarmActive: boolean = false) {
+    if (isAlarmActive) {
+        return {
+            containerTotalNum: 3,
+            textObject: [
+                new TextContainerProperty({
+                    containerID: 2,
+                    containerName: 'mainDisplay', // Keep same name for partial update compatibility
+                    xPosition: 400, // Top right corner
+                    yPosition: 10,
+                    width: 176,
+                    height: 40,
+                    content: mainContent,
+                    isEventCapture: 0,
+                }),
+            ],
+            listObject: [
+                new ListContainerProperty({
+                    containerID: 3,
+                    containerName: listName,
+                    xPosition: 0,
+                    yPosition: 200, // Move list off the center
+                    width: 50,      // Small width so it's not visible
+                    height: 50,
+                    isEventCapture: 1,
+                    itemContainer: new ListItemContainerProperty({
+                        itemCount: 1,
+                        itemWidth: 50,
+                        itemName: [" "], // Avoid absolute zero length string to prevent runtime errors
+                        isItemSelectBorderEn: 0, // No border
+                    }),
+                }),
+            ],
+            imageObject: [
+                new ImageContainerProperty({
+                    containerID: 1,
+                    containerName: 'headerImage',
+                    xPosition: 10, // Move image completely off screen instead of destroying container!
+                    yPosition: showImage ? 0 : 300,
+                    width: 50, // Proporcional bem menor para a nova imagem (50x70)
+                    height: 70,
+                }),
+            ]
+        };
+    }
+
     return {
-        containerTotalNum: showImage ? 3 : 2,
+        containerTotalNum: 3,
         textObject: [
             new TextContainerProperty({
                 containerID: 2,
                 containerName: 'mainDisplay',
                 xPosition: 227, // (576 - 400) / 2
                 yPosition: mainY,
-                width: 400,
+                width: 150,
                 height: 40,
                 content: mainContent,
                 isEventCapture: 0,
@@ -124,16 +176,16 @@ function buildContainerPayload(mainContent: string, listName: string, btnNames: 
                 }),
             }),
         ],
-        imageObject: showImage ? [
+        imageObject: [
             new ImageContainerProperty({
                 containerID: 1,
                 containerName: 'headerImage',
-                xPosition: 238, // (576 - 100) / 2
-                yPosition: 0,
-                width: 100,
-                height: 50,
+                xPosition: 10, // (576 - 50) / 2
+                yPosition: showImage ? 0 : 300, // Move off screen if showImage is false
+                width: 50,
+                height: 70,
             }),
-        ] : [],
+        ]
     };
 }
 
@@ -153,8 +205,9 @@ async function _doRender() {
 
         // Special handling for TIMER_SELECT: move "Duração" to top and hide logo
         const isTimerSelect = state === AppState.TIMER_SELECT;
+        const isAlarmActive = state === AppState.ALARM_ACTIVE;
         const mainY = isTimerSelect ? 0 : 50;
-        const showLogo = !isTimerSelect;
+        const showLogo = !isTimerSelect && !isAlarmActive; // Ensure logo is off in ALARM_ACTIVE
 
         // --- OPTIMIZATION: Partial Update ---
         // If the structure (state, list, logo) is the same, ONLY update the text.
@@ -174,7 +227,7 @@ async function _doRender() {
             console.warn("[view] textContainerUpgrade failed, falling back to full rebuild");
         }
 
-        const payload = buildContainerPayload(mainContent, listName, btnNames, mainY, showLogo);
+        const payload = buildContainerPayload(mainContent, listName, btnNames, mainY, showLogo, isAlarmActive);
 
         if (!isPageCreated) {
             console.log(`[view] First render → createStartUpPageContainer (${state})`);
@@ -195,10 +248,11 @@ async function _doRender() {
         }
 
         // --- Handle Image Update ---
+        // Always try to load image if it's supposed to be visible and changed
         if (isPageCreated && showLogo && lastImageKey !== headerImage) {
             try {
                 console.log("[view] Updating header image...");
-                const rawData = await convertImageToGrayscalePng(headerImage, 100, 50);
+                const rawData = await convertImageToGrayscalePng(headerImage, 50, 70);
                 await bridge.updateImageRawData(new ImageRawDataUpdate({
                     containerID: 1,
                     containerName: 'headerImage',

@@ -4,6 +4,7 @@ export enum AppState {
     TIMER_SELECT = 'TimerSelect',  // tela de seleção de duração
     TIMER = 'Timer',               // timer em execução/pausado
     ALARM = 'Alarm',
+    ALARM_ACTIVE = 'AlarmActive',
     ALARM_TRIGGERED = 'AlarmTriggered'
 }
 

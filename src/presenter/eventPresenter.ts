@@ -18,6 +18,8 @@ import { createView } from "../view/GlassesView";
 /** Durações pré-definidas em segundos, alinhadas com btnNames do TIMER_SELECT */
 const TIMER_DURATIONS_SECONDS = [60, 300, 600, 1800];
 
+let lastAlarmActiveClick = 0;
+
 export async function eventHandler() {
     console.log("EventHandler: Initializing state-driven button logic");
     const bridge = await waitForEvenAppBridge();
@@ -134,6 +136,9 @@ export async function eventHandler() {
             if (index === 0) {
                 console.log("ALARM: Toggle Enabled");
                 clockModel.alarmSetting.enabled = !clockModel.alarmSetting.enabled;
+                if (clockModel.alarmSetting.enabled) {
+                    clockModel.state = AppState.ALARM_ACTIVE;
+                }
             } else if (index === 1) {
                 console.log("ALARM: +1 Hour");
                 clockModel.alarmSetting.hour = (clockModel.alarmSetting.hour + 1) % 24;
@@ -147,13 +152,34 @@ export async function eventHandler() {
         }
 
         // ==========================================
-        // 6. Alarm DISPARADO → qualquer botão volta ao menu
+        // 6. ALARM ACTIVE
+        // Toca num botao invisível. Detecta double click para voltar.
+        // ==========================================
+        else if (state === AppState.ALARM_ACTIVE) {
+            const now = Date.now();
+            // Double-click em menos de 500ms
+            if (now - lastAlarmActiveClick < 500) {
+                console.log("ALARM_ACTIVE: Double click -> back");
+                clockModel.state = AppState.ALARM; // Voltar para configuração de alarme normal
+                lastAlarmActiveClick = 0; // reset
+            } else {
+                lastAlarmActiveClick = now;
+            }
+        }
+
+        // ==========================================
+        // 7. Alarm DISPARADO → qualquer botão volta ao menu
         // ==========================================
         else if (state === AppState.ALARM_TRIGGERED) {
             console.log("ALARM_TRIGGERED: OK clicked, disabling alarm");
             clockModel.alarmSetting.enabled = false; // Disable to prevent re-triggering in the same minute
             clockModel.state = AppState.MENU;
         }
+
+        // Update WebView to sync state
+        import("../view/WebView").then(mod => {
+            mod.webView.updateUI();
+        });
 
         // Update display immediately after any interaction
         createView();

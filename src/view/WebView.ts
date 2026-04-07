@@ -60,7 +60,7 @@ class WebView {
             displayTime = formatTime(stopwatchModel.getElapsedSeconds());
         } else if (state === AppState.TIMER) {
             displayTime = formatTime(timerModel.getRemainingSeconds());
-        } else if (state === AppState.ALARM) {
+        } else if (state === AppState.ALARM || state === AppState.ALARM_ACTIVE) {
             displayTime =
                 `${clockModel.alarmSetting.hour.toString().padStart(2, '0')}:` +
                 `${clockModel.alarmSetting.min.toString().padStart(2, '0')}`;
@@ -182,6 +182,8 @@ class WebView {
                 clockModel.alarmSetting.min = Math.min(59, Math.max(0, m));
                 clockModel.alarmSetting.enabled = true; // Auto-enable when saving
 
+                clockModel.state = AppState.ALARM_ACTIVE; // Go to active screen
+
                 this.updateUI();
                 createView();
             };
@@ -192,7 +194,8 @@ class WebView {
         switch (state) {
             case AppState.STOPWATCH: return 'Stopwatch';
             case AppState.TIMER: return 'Timer';
-            case AppState.ALARM: return 'Alarm';
+            case AppState.ALARM: 
+            case AppState.ALARM_ACTIVE: return 'Alarm';
             default: return '';
         }
     }
@@ -201,7 +204,8 @@ class WebView {
         switch (state) {
             case AppState.STOPWATCH: return 'stopwatch';
             case AppState.TIMER: return 'timer';
-            case AppState.ALARM: return 'alarm';
+            case AppState.ALARM:
+            case AppState.ALARM_ACTIVE: return 'alarm';
             default: return 'menu';
         }
     }

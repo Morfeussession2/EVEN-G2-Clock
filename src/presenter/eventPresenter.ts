@@ -18,8 +18,7 @@ import { createView } from "../view/GlassesView";
 /** Durações pré-definidas em segundos, alinhadas com btnNames do TIMER_SELECT */
 const TIMER_DURATIONS_SECONDS = [60, 300, 600, 1800];
 
-let lastAlarmActiveClick = 0;
-
+// Native hardware interactions handle double clicks.
 export async function eventHandler() {
     console.log("EventHandler: Initializing state-driven button logic");
     const bridge = await waitForEvenAppBridge();
@@ -37,11 +36,25 @@ export async function eventHandler() {
             index = 0;
         }
 
+        const state = clockModel.state;
+
+        // --- NATIVE DOUBLE CLICK HANDLER ---
+        // Even SDK sysEvent.eventType === 3 represents TOUCH_DOUBLE_CLICK_EVENT
+        if (event.sysEvent && event.sysEvent.eventType === 3) {
+            if (state === AppState.ALARM_ACTIVE) {
+                console.log("ALARM_ACTIVE: Native Double click -> back");
+                clockModel.state = AppState.ALARM; // Voltar para configuração de alarme normal
+                import("../view/WebView").then(mod => {
+                    mod.webView.updateUI();
+                });
+                createView();
+                return; // Early return to avoid List processing
+            }
+        }
+
         if (index === undefined) {
             return;
         }
-
-        const state = clockModel.state;
         const itemName = event.listEvent?.currentSelectItemName || '?';
         console.log(`[EVENT] State: ${state} | Index: ${index} | Item: ${itemName}`);
 
@@ -156,15 +169,8 @@ export async function eventHandler() {
         // Toca num botao invisível. Detecta double click para voltar.
         // ==========================================
         else if (state === AppState.ALARM_ACTIVE) {
-            const now = Date.now();
-            // Double-click em menos de 500ms
-            if (now - lastAlarmActiveClick < 500) {
-                console.log("ALARM_ACTIVE: Double click -> back");
-                clockModel.state = AppState.ALARM; // Voltar para configuração de alarme normal
-                lastAlarmActiveClick = 0; // reset
-            } else {
-                lastAlarmActiveClick = now;
-            }
+            // Wait for native system double tap instead of relying on discrete list clicks
+            console.log("ALARM_ACTIVE: Single click ignored. Please use native double-tap on the temple to exit.");
         }
 
         // ==========================================
